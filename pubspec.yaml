@@ -28,7 +28,7 @@ dependencies:
   data_table_2: ^2.5.11
   firebase_ui_firestore: ^1.6.2
   cached_network_image: ^3.3.1
-  intl: ^0.18.0
+  intl: 
   url_strategy: ^0.2.0
   image_picker: ^1.0.7
   firebase_storage: ^11.6.7
@@ -42,7 +42,7 @@ dependencies:
   csv: ^6.0.0
   html_unescape: ^2.0.0
   flutter_html: ^3.0.0-beta.2
-  fl_chart: ^0.66.2
+  fl_chart: 
   rounded_loading_button:
     git:
       url: https://github.com/scopendo/flutter_rounded_loading_button
