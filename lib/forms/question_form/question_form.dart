@@ -61,7 +61,7 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   var questionAudioCtrl = TextEditingController();
   var questionVideoCtrl = TextEditingController();
 
-  String? _selectedCategoryId;
+  String? _selectedSectionId;
 
   late Future _quizes;
   String? _selectedQuizId;
@@ -140,7 +140,9 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
 
   Future<String?> _uploadAudioToFirebaseHosting() async {
     String? audioUrl;
-    final Reference storageReference = FirebaseStorage.instance.ref().child('question_audios/${questionAudioCtrl.text}');
+    final Reference storageReference = FirebaseStorage.instance
+        .ref()
+        .child('question_audios/${questionAudioCtrl.text}');
     final UploadTask uploadTask = storageReference.putData(_seletedAudioByte!);
     await uploadTask.whenComplete(() async {
       audioUrl = await storageReference.getDownloadURL();
@@ -153,9 +155,9 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
       _questionType = Constants.questionTypes.keys.elementAt(0);
       _quizes = Future.value();
     } else {
-      _selectedCategoryId = widget.q?.catId;
+      _selectedSectionId = widget.q?.sectionId;
       _selectedQuizId = widget.q?.quizId;
-      _quizes = FirebaseService().getCategoryBasedQuizes(widget.q!.catId!);
+      _quizes = FirebaseService().getSectionBasedQuizes(widget.q!.sectionId!);
       questionTitleCtlr.text = widget.q!.questionTitle.toString();
 
       _questionType = widget.q!.questionType;
@@ -174,10 +176,17 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
       }
 
       _correctAnsIndex = widget.q!.correctAnswerIndex!;
-      questionImageCtrl.text = widget.q?.questionType == null || widget.q?.questionImageUrl == null ? '' : widget.q!.questionImageUrl.toString();
+      questionImageCtrl.text =
+          widget.q?.questionType == null || widget.q?.questionImageUrl == null
+              ? ''
+              : widget.q!.questionImageUrl.toString();
       _questionType = widget.q!.questionType;
-      questionAudioCtrl.text = widget.q!.questionAudioUrl == null ? '' : widget.q!.questionAudioUrl.toString();
-      questionVideoCtrl.text = widget.q!.questionVideoUrl == null ? '' : widget.q!.questionVideoUrl.toString();
+      questionAudioCtrl.text = widget.q!.questionAudioUrl == null
+          ? ''
+          : widget.q!.questionAudioUrl.toString();
+      questionVideoCtrl.text = widget.q!.questionVideoUrl == null
+          ? ''
+          : widget.q!.questionVideoUrl.toString();
     }
   }
 
@@ -196,7 +205,8 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   @override
   void initState() {
     _submitBtnText = widget.q == null ? 'Upload Question' : 'Update Question';
-    _dialogText = widget.q == null ? 'Uploaded Successfully!' : 'Updated Successfully!';
+    _dialogText =
+        widget.q == null ? 'Uploaded Successfully!' : 'Updated Successfully!';
     initData();
     super.initState();
   }
@@ -224,7 +234,7 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
 
   void _handleSubmit() async {
     if (hasAccess(ref)) {
-      if (_selectedCategoryId != null) {
+      if (_selectedSectionId != null) {
         if (_selectedQuizId != null) {
           if (formKey.currentState!.validate()) {
             formKey.currentState!.save();
@@ -238,7 +248,7 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
           openCustomDialog(context, 'Select A Quiz Name', '');
         }
       } else {
-        openCustomDialog(context, 'Select A Category', '');
+        openCustomDialog(context, 'Select A Section', '');
       }
     } else {
       openCustomDialog(context, Config.testingDialog, '');
@@ -246,7 +256,9 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   }
 
   _afterValidation() {
-    if (_questionType == Constants.questionTypes.keys.elementAt(0) || _questionType == Constants.questionTypes.keys.elementAt(3) || _questionType == Constants.questionTypes.keys.elementAt(4)) {
+    if (_questionType == Constants.questionTypes.keys.elementAt(0) ||
+        _questionType == Constants.questionTypes.keys.elementAt(3) ||
+        _questionType == Constants.questionTypes.keys.elementAt(4)) {
       //text only
       _btnCtlr.start();
       _uploadProcedures();
@@ -263,7 +275,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
     if (_selectedQuestionImage != null) {
       //local Image
       _btnCtlr.start();
-      await FirebaseService().uploadImageToFirebaseHosting(_selectedQuestionImage!, 'question_images').then((String? imageUrl) {
+      await FirebaseService()
+          .uploadImageToFirebaseHosting(
+              _selectedQuestionImage!, 'question_images')
+          .then((String? imageUrl) {
         if (imageUrl != null) {
           setState(() => questionImageCtrl.text = imageUrl);
           _uploadProcedures();
@@ -308,12 +323,13 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   _uploadProcedures() async {
     await uploadQuestion().then((value) async {
       if (widget.q == null) {
-        await await FirebaseService().increaseQuestionCountInQuiz(_selectedQuizId!, null);
+        await await FirebaseService()
+            .increaseQuestionCountInQuiz(_selectedQuizId!, null);
         _clearForm();
         ref.invalidate(questionsCountProvider);
       }
       _btnCtlr.reset();
-      if(!mounted) return;
+      if (!mounted) return;
       openCustomDialog(context, _dialogText, '');
     });
   }
@@ -321,31 +337,40 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   Future<List<String>> _getOptions() async {
     List<String> options;
     if (_optionType == Constants.optionTypes.keys.elementAt(0)) {
-      options = [option1Ctlr.text, option2Ctlr.text, option3Ctlr.text, option4Ctlr.text];
+      options = [
+        option1Ctlr.text,
+        option2Ctlr.text,
+        option3Ctlr.text,
+        option4Ctlr.text
+      ];
     } else if (_optionType == Constants.optionTypes.keys.elementAt(1)) {
       options = ['True', 'False'];
     } else if (_optionType == Constants.optionTypes.keys.elementAt(2)) {
       List<String> x = [];
       if (_option1Image != null) {
-        String newUpload = await FirebaseService().uploadImageToFirebaseHosting(_option1Image!, 'option_images');
+        String newUpload = await FirebaseService()
+            .uploadImageToFirebaseHosting(_option1Image!, 'option_images');
         x.insert(0, newUpload);
       } else {
         x.insert(0, option1ImageCtlr.text);
       }
       if (_option2Image != null) {
-        String newUpload = await FirebaseService().uploadImageToFirebaseHosting(_option2Image!, 'option_images');
+        String newUpload = await FirebaseService()
+            .uploadImageToFirebaseHosting(_option2Image!, 'option_images');
         x.insert(1, newUpload);
       } else {
         x.insert(1, option2ImageCtlr.text);
       }
       if (_option3Image != null) {
-        String newUpload = await FirebaseService().uploadImageToFirebaseHosting(_option3Image!, 'option_images');
+        String newUpload = await FirebaseService()
+            .uploadImageToFirebaseHosting(_option3Image!, 'option_images');
         x.insert(2, newUpload);
       } else {
         x.insert(2, option3ImageCtlr.text);
       }
       if (_option4Image != null) {
-        String newUpload = await FirebaseService().uploadImageToFirebaseHosting(_option4Image!, 'option_images');
+        String newUpload = await FirebaseService()
+            .uploadImageToFirebaseHosting(_option4Image!, 'option_images');
         x.insert(3, newUpload);
       } else {
         x.insert(3, option4ImageCtlr.text);
@@ -359,14 +384,16 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
 
   Future uploadQuestion() async {
     List<String>? options = await _getOptions();
-    final String docId = widget.q == null ? firestore.collection(collectionName).doc().id : widget.q!.id!;
+    final String docId = widget.q == null
+        ? firestore.collection(collectionName).doc().id
+        : widget.q!.id!;
     final String rawExplaination = await editorController.getText();
     String? explaination = rawExplaination != '' ? rawExplaination : null;
     var createdAt = widget.q == null ? DateTime.now() : widget.q!.createdAt;
     var updatedAt = widget.q == null ? null : DateTime.now();
     Question q = Question(
       id: docId,
-      catId: _selectedCategoryId,
+      sectionId: _selectedSectionId,
       createdAt: createdAt,
       updatedAt: updatedAt,
       questionTitle: questionTitleCtlr.text,
@@ -374,15 +401,21 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
       options: options,
       correctAnswerIndex: _correctAnsIndex,
       questionType: _questionType,
-      questionImageUrl: questionImageCtrl.text.isEmpty ? null : questionImageCtrl.text,
-      questionAudioUrl: questionAudioCtrl.text.isEmpty ? null : questionAudioCtrl.text,
-      questionVideoUrl: questionVideoCtrl.text.isEmpty ? null : questionVideoCtrl.text,
-      explaination: explaination,
+      questionImageUrl:
+          questionImageCtrl.text.isEmpty ? null : questionImageCtrl.text,
+      questionAudioUrl:
+          questionAudioCtrl.text.isEmpty ? null : questionAudioCtrl.text,
+      questionVideoUrl:
+          questionVideoCtrl.text.isEmpty ? null : questionVideoCtrl.text,
+      explanation: explaination,
       optionsType: _optionType,
     );
     Map<String, dynamic> data = Question.getMap(q);
 
-    await firestore.collection(collectionName).doc(docId).set(data, SetOptions(merge: true));
+    await firestore
+        .collection(collectionName)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
   }
 
   @override
@@ -420,15 +453,19 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
-                            'Category',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+                            'Section',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
-                        CategoryDropdown(
-                          selectedCategoryId: _selectedCategoryId,
+                        SectionAllDropdown(
+                          selectedSectionId: _selectedSectionId,
                           onChanged: (value) {
-                            _selectedCategoryId = value;
-                            _quizes = FirebaseService().getCategoryBasedQuizes(value);
+                            _selectedSectionId = value;
+                            _quizes =
+                                FirebaseService().getSectionBasedQuizes(value);
                             setState(() {});
                           },
                         )
@@ -444,13 +481,18 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
                             'Quiz Name',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         FutureBuilder(
                           future: _quizes,
-                          builder: (BuildContext context, AsyncSnapshot snapshot) {
-                            if (snapshot.connectionState == ConnectionState.done) {
+                          builder:
+                              (BuildContext context, AsyncSnapshot snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
                               final List<Quiz> quizes = snapshot.data ?? [];
                               return QuizDropdown(
                                 seletedQuizId: _selectedQuizId,
@@ -475,14 +517,19 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   'Question Type',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               _questionTypeDropdown(),
               const SizedBox(height: 20),
               QuestionTitle(questionType: _questionType),
               const SizedBox(height: 5),
-              QuestionTextField(questionType: _questionType, questionTitleCtlr: questionTitleCtlr),
+              QuestionTextField(
+                  questionType: _questionType,
+                  questionTitleCtlr: questionTitleCtlr),
               const SizedBox(height: 20),
               QuestionImage(
                 questionType: _questionType,
@@ -501,14 +548,17 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                 },
                 onPickAudio: _onPickAudio,
               ),
-              QuestionVideo(questionVideoCtrl: questionVideoCtrl, questionType: _questionType),
+              QuestionVideo(
+                  questionVideoCtrl: questionVideoCtrl,
+                  questionType: _questionType),
               _optionTypeWidget(context),
               const SizedBox(height: 20),
               _options(),
               const SizedBox(height: 20),
               _correctAnsDropdown(),
               const SizedBox(height: 30),
-              QuestionExplanation(editorController: editorController, q: widget.q),
+              QuestionExplanation(
+                  editorController: editorController, q: widget.q),
               const SizedBox(height: 30),
             ],
           ),
@@ -531,7 +581,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
           children: [
             Text(
               _submitBtnText,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
             )
           ],
         ),
@@ -622,17 +675,25 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
       children: [
         Row(
           children: [
-            Expanded(child: OptionTextField(textController: option1Ctlr, title: 'Option A')),
+            Expanded(
+                child: OptionTextField(
+                    textController: option1Ctlr, title: 'Option A')),
             const SizedBox(width: 15),
-            Expanded(child: OptionTextField(textController: option2Ctlr, title: 'Option B')),
+            Expanded(
+                child: OptionTextField(
+                    textController: option2Ctlr, title: 'Option B')),
           ],
         ),
         const SizedBox(height: 30),
         Row(
           children: [
-            Expanded(child: OptionTextField(textController: option3Ctlr, title: 'Option C')),
+            Expanded(
+                child: OptionTextField(
+                    textController: option3Ctlr, title: 'Option C')),
             const SizedBox(width: 15),
-            Expanded(child: OptionTextField(textController: option4Ctlr, title: 'Option D')),
+            Expanded(
+                child: OptionTextField(
+                    textController: option4Ctlr, title: 'Option D')),
           ],
         ),
       ],
@@ -642,15 +703,29 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
   Row _twoOptions() {
     return Row(
       children: [
-        Expanded(child: OptionTextField(textController: option1Ctlr, title: 'Option A', hintText: 'True', isReadOnly: true, hasValidation: false)),
+        Expanded(
+            child: OptionTextField(
+                textController: option1Ctlr,
+                title: 'Option A',
+                hintText: 'True',
+                isReadOnly: true,
+                hasValidation: false)),
         const SizedBox(width: 15),
-        Expanded(child: OptionTextField(textController: option2Ctlr, title: 'Option B', hintText: 'False', isReadOnly: true, hasValidation: false)),
+        Expanded(
+            child: OptionTextField(
+                textController: option2Ctlr,
+                title: 'Option B',
+                hintText: 'False',
+                isReadOnly: true,
+                hasValidation: false)),
       ],
     );
   }
 
   Widget _correctAnsDropdown() {
-    bool hasFourOptions = _optionType == Constants.optionTypes.keys.elementAt(0) || _optionType == Constants.optionTypes.keys.elementAt(2);
+    bool hasFourOptions =
+        _optionType == Constants.optionTypes.keys.elementAt(0) ||
+            _optionType == Constants.optionTypes.keys.elementAt(2);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -658,13 +733,19 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
           padding: const EdgeInsets.only(bottom: 5),
           child: Text(
             'Correct Answer Index',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         Container(
             height: 50,
             padding: const EdgeInsets.only(left: 15, right: 15),
-            decoration: BoxDecoration(color: Colors.grey[200], border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(30)),
+            decoration: BoxDecoration(
+                color: Colors.grey[200],
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(30)),
             child: DropdownButtonFormField(
                 itemHeight: 50,
                 decoration: const InputDecoration(border: InputBorder.none),
@@ -689,7 +770,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                     value: 2,
                     child: Text(
                       'Option C',
-                      style: TextStyle(color: hasFourOptions ? Colors.grey[900] : Colors.grey[200]),
+                      style: TextStyle(
+                          color: hasFourOptions
+                              ? Colors.grey[900]
+                              : Colors.grey[200]),
                     ),
                   ),
                   DropdownMenuItem(
@@ -697,7 +781,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
                     value: 3,
                     child: Text(
                       'Option D',
-                      style: TextStyle(color: hasFourOptions ? Colors.grey[900] : Colors.grey[200]),
+                      style: TextStyle(
+                          color: hasFourOptions
+                              ? Colors.grey[900]
+                              : Colors.grey[200]),
                     ),
                   )
                 ])),
@@ -709,7 +796,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
     return Container(
         height: 50,
         padding: const EdgeInsets.only(left: 15, right: 15),
-        decoration: BoxDecoration(color: Colors.grey[200], border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(
+            color: Colors.grey[200],
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(30)),
         child: DropdownButtonFormField(
           itemHeight: 50,
           decoration: const InputDecoration(border: InputBorder.none),
@@ -741,11 +831,13 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _optionImageBox(option1ImageCtlr, _option1Image, _onSelectOption1Image, 0, 'Option A'),
+            _optionImageBox(option1ImageCtlr, _option1Image,
+                _onSelectOption1Image, 0, 'Option A'),
             const SizedBox(
               width: 15,
             ),
-            _optionImageBox(option2ImageCtlr, _option2Image, _onSelectOption2Image, 1, 'Option B'),
+            _optionImageBox(option2ImageCtlr, _option2Image,
+                _onSelectOption2Image, 1, 'Option B'),
           ],
         ),
         const SizedBox(
@@ -754,18 +846,21 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _optionImageBox(option3ImageCtlr, _option3Image, _onSelectOption3Image, 2, 'Option C'),
+            _optionImageBox(option3ImageCtlr, _option3Image,
+                _onSelectOption3Image, 2, 'Option C'),
             const SizedBox(
               width: 15,
             ),
-            _optionImageBox(option4ImageCtlr, _option4Image, _onSelectOption4Image, 3, 'Option D'),
+            _optionImageBox(option4ImageCtlr, _option4Image,
+                _onSelectOption4Image, 3, 'Option D'),
           ],
         ),
       ],
     );
   }
 
-  Expanded _optionImageBox(TextEditingController textCtlr, XFile? image, VoidCallback onPickImage, int itemIndex, String optionName) {
+  Expanded _optionImageBox(TextEditingController textCtlr, XFile? image,
+      VoidCallback onPickImage, int itemIndex, String optionName) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -775,7 +870,10 @@ class _QuestionFormState extends ConsumerState<QuestionForm> {
             padding: const EdgeInsets.only(bottom: 5),
             child: Text(
               optionName,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           ImageTextField(

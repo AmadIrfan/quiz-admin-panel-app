@@ -1,29 +1,29 @@
-import 'package:app_admin/components/image_preview.dart';
+import 'package:app_admin/configs/config.dart';
+import 'package:app_admin/forms/section_form.dart';
+import 'package:app_admin/models/sections_models.dart';
 import 'package:app_admin/providers/user_role_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
-import '../configs/config.dart';
-import '../forms/quiz_form.dart';
-import '../models/quiz.dart';
+
 import '../services/firebase_service.dart';
 import '../utils/cached_image.dart';
 import '../utils/custom_dialog.dart';
 import '../utils/styles.dart';
 import 'custom_dialogs.dart';
+import 'image_preview.dart';
 
-class QuizDataSource extends DataTableSource {
-  final List<Quiz> quizList;
+class SectionDataSource extends DataTableSource {
+  final List<Section> quizList;
   final BuildContext context;
   final WidgetRef ref;
 
-  QuizDataSource(this.context, this.quizList, this.ref);
+  SectionDataSource(this.context, this.quizList, this.ref);
 
-  final String collectionName = 'quizes';
+  final String collectionName = 'sections';
   final _deleteBtnCtlr = RoundedLoadingButtonController();
 
-
-  _handleDelete(Quiz d) async {
+  _handleDelete(Section d) async {
     _deleteBtnCtlr.start();
     await _onDelete(d).then((value) {
       _deleteBtnCtlr.reset();
@@ -32,13 +32,13 @@ class QuizDataSource extends DataTableSource {
     });
   }
 
-  Future _onDelete(Quiz d) async {
+  Future _onDelete(Section d) async {
     await FirebaseService().deleteContent(collectionName, d.id!);
-    await FirebaseService().decreaseQuizCountInCategory(d.parentId!);
-    await FirebaseService().deleteRelatedQuestionsAssociatedWithQuiz(d.id!);
+//     await FirebaseService().decreaseQuizCountInCategory(d.parentId!);
+//     await FirebaseService().deleteRelatedQuestionsAssociatedWithQuiz(d.id!);
   }
 
-  _onDeletePressed(Quiz d) async {
+  _onDeletePressed(Section d) async {
     if (hasAdminAccess(ref)) {
       _openDeteleDialog(context, d);
     } else {
@@ -46,7 +46,7 @@ class QuizDataSource extends DataTableSource {
     }
   }
 
-  void _openDeteleDialog(context, Quiz d) {
+  void _openDeteleDialog(context, Section d) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -54,12 +54,20 @@ class QuizDataSource extends DataTableSource {
             contentPadding: const EdgeInsets.all(50),
             elevation: 0,
             children: <Widget>[
-              const Text('Delete This Quiz?', style: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w700)),
+              const Text('Delete This Section?',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700)),
               const SizedBox(
                 height: 10,
               ),
-              Text("Do you want to delete this quiz and it's contents?\nWarning: All of the questions included to this quiz will be deleted too!",
-                  style: TextStyle(color: Colors.grey[700], fontSize: 15, fontWeight: FontWeight.w400)),
+              Text(
+                  "Do you want to delete this Section and it's contents?\nWarning: All of the questions included and quizzes to this sections will be deleted too!",
+                  style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400)),
               const SizedBox(
                 height: 30,
               ),
@@ -75,7 +83,8 @@ class QuizDataSource extends DataTableSource {
                     onPressed: () => _handleDelete(d),
                     child: const Text(
                       'Yes',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -88,7 +97,8 @@ class QuizDataSource extends DataTableSource {
                     onPressed: () => Navigator.pop(context),
                     child: const Text(
                       'No',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -101,30 +111,25 @@ class QuizDataSource extends DataTableSource {
   @override
   DataRow getRow(int index) {
     return DataRow.byIndex(cells: [
-
-      DataCell(
-        SizedBox(
-          height: 40,
-          width: 60,
-          child: InkWell(
-            onTap: ()=> openImagePreview(context, quizList[index].thumbnailUrl!),
-            child: CustomCacheImage(imageUrl: quizList[index].thumbnailUrl, radius: 3)),
-        )
-      ),
-      
+      DataCell(SizedBox(
+        height: 40,
+        width: 60,
+        child: InkWell(
+            onTap: () =>
+                openImagePreview(context, quizList[index].thumbnailUrl!),
+            child: CustomCacheImage(
+                imageUrl: quizList[index].thumbnailUrl, radius: 3)),
+      )),
       DataCell(Text(
         quizList[index].name.toString(),
         style: defaultTextStyle(context),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       )),
-      
-
-      DataCell(Text(
-        quizList[index].questionCount.toString(),
-        style: defaultTextStyle(context),
-      )),
-      
+//       DataCell(Text(
+//         quizList[index].index.toString(),
+//         style: defaultTextStyle(context),
+//       )),
       DataCell(
         FutureBuilder(
           future: FirebaseService().getCategoryName(quizList[index].parentId!),
@@ -143,10 +148,7 @@ class QuizDataSource extends DataTableSource {
     ], index: index);
   }
 
-  
-
-
-  Row _actions(Quiz quiz) {
+  Row _actions(Section quiz) {
     return Row(
       children: [
         CircleAvatar(
@@ -158,7 +160,7 @@ class QuizDataSource extends DataTableSource {
             icon: const Icon(Icons.edit),
             onPressed: () => CustomDialogs.openResponsiveDialog(
               context,
-              widget: QuizForm(quiz: quiz),
+              widget: SectionForm(sections: quiz),
               horizontalPaddingPercentage: 0.15,
               verticalPaddingPercentage: 0.05,
             ),
@@ -193,4 +195,3 @@ class QuizDataSource extends DataTableSource {
   @override
   int get selectedRowCount => 0;
 }
-

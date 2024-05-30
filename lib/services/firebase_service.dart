@@ -2,6 +2,7 @@ import 'package:app_admin/models/notification.dart';
 import 'package:app_admin/models/purchases.dart';
 import 'package:app_admin/models/question.dart';
 import 'package:app_admin/models/quiz.dart';
+import 'package:app_admin/models/sections_models.dart';
 import 'package:app_admin/models/sp_category.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,7 +23,11 @@ class FirebaseService {
 
   Future<String?> getCategoryName(String catId) async {
     String? categoryName;
-    await firestore.collection('categories').doc(catId).get().then((DocumentSnapshot snap) {
+    await firestore
+        .collection('categories')
+        .doc(catId)
+        .get()
+        .then((DocumentSnapshot snap) {
       categoryName = snap['name'];
     });
     return categoryName;
@@ -30,7 +35,11 @@ class FirebaseService {
 
   Future<String?> getQuizName(String quizId) async {
     String? quizName;
-    await firestore.collection('quizes').doc(quizId).get().then((DocumentSnapshot snap) {
+    await firestore
+        .collection('quizes')
+        .doc(quizId)
+        .get()
+        .then((DocumentSnapshot snap) {
       quizName = snap['name'];
     });
     return quizName;
@@ -38,44 +47,82 @@ class FirebaseService {
 
   Future increaseQuestionCountInQuiz(String quizId, int? itemSize) async {
     final int size = itemSize ?? 1;
-    await firestore.collection('quizes').doc(quizId).get().then((DocumentSnapshot snap) async {
+    await firestore
+        .collection('quizes')
+        .doc(quizId)
+        .get()
+        .then((DocumentSnapshot snap) async {
       int count = snap.get('question_count') ?? 0;
-      await firestore.collection('quizes').doc(quizId).update({'question_count': count + size});
+      await firestore
+          .collection('quizes')
+          .doc(quizId)
+          .update({'question_count': count + size});
     });
   }
 
   Future decreaseQuestionCountInQuiz(String quizId) async {
-    await firestore.collection('quizes').doc(quizId).get().then((DocumentSnapshot snap) async {
+    await firestore
+        .collection('quizes')
+        .doc(quizId)
+        .get()
+        .then((DocumentSnapshot snap) async {
       int count = snap.get('question_count') ?? 0;
-      await firestore.collection('quizes').doc(quizId).update({'question_count': count - 1});
+      await firestore
+          .collection('quizes')
+          .doc(quizId)
+          .update({'question_count': count - 1});
     });
   }
 
   Future increaseQuizCountInCategory(String categoryId) async {
-    await firestore.collection('categories').doc(categoryId).get().then((DocumentSnapshot snap) async {
+    await firestore
+        .collection('categories')
+        .doc(categoryId)
+        .get()
+        .then((DocumentSnapshot snap) async {
       int count = snap.get('quiz_count') ?? 0;
-      await firestore.collection('categories').doc(categoryId).update({'quiz_count': count + 1});
+      await firestore
+          .collection('categories')
+          .doc(categoryId)
+          .update({'quiz_count': count + 1});
     });
   }
 
   Future decreaseQuizCountInCategory(String categoryId) async {
-    await firestore.collection('categories').doc(categoryId).get().then((DocumentSnapshot snap) async {
+    await firestore
+        .collection('categories')
+        .doc(categoryId)
+        .get()
+        .then((DocumentSnapshot snap) async {
       int count = snap.get('quiz_count') ?? 0;
-      await firestore.collection('categories').doc(categoryId).update({'quiz_count': count - 1});
+      await firestore
+          .collection('categories')
+          .doc(categoryId)
+          .update({'quiz_count': count - 1});
     });
   }
 
   Future removeQuizFromFeatured(String documentName) async {
-    return firestore.collection('quizes').doc(documentName).update({'featured': false});
+    return firestore
+        .collection('quizes')
+        .doc(documentName)
+        .update({'featured': false});
   }
 
   Future addQuizToFeatured(String documentName) async {
-    return firestore.collection('quizes').doc(documentName).update({'featured': true});
+    return firestore
+        .collection('quizes')
+        .doc(documentName)
+        .update({'featured': true});
   }
 
   Future deleteRelatedQuizesAndQuestions(String catId) async {
     WriteBatch batch = firestore.batch();
-    await firestore.collection('quizes').where('parent_id', isEqualTo: catId).get().then((QuerySnapshot snapshot) async {
+    await firestore
+        .collection('quizes')
+        .where('parent_id', isEqualTo: catId)
+        .get()
+        .then((QuerySnapshot snapshot) async {
       if (snapshot.size != 0) {
         // ignore: avoid_function_literals_in_foreach_calls
         snapshot.docs.forEach((doc) async {
@@ -89,7 +136,11 @@ class FirebaseService {
 
   Future deleteRelatedQuestionsAssociatedWithQuiz(String quizId) async {
     WriteBatch batch = firestore.batch();
-    await firestore.collection('questions').where('quiz_id', isEqualTo: quizId).get().then((QuerySnapshot snapshot) async {
+    await firestore
+        .collection('questions')
+        .where('quiz_id', isEqualTo: quizId)
+        .get()
+        .then((QuerySnapshot snapshot) async {
       if (snapshot.size != 0) {
         // ignore: avoid_function_literals_in_foreach_calls
         snapshot.docs.forEach((doc) => batch.delete(doc.reference));
@@ -100,8 +151,22 @@ class FirebaseService {
 
   Future<List<Category>> getCategories() async {
     List<Category> data = [];
-    await firestore.collection('categories').get().then((QuerySnapshot? snapshot) {
+    await firestore
+        .collection('categories')
+        .get()
+        .then((QuerySnapshot? snapshot) {
       data = snapshot!.docs.map((e) => Category.fromFirestore(e)).toList();
+    });
+    return data;
+  }
+
+  Future<List<Section>> getSections() async {
+    List<Section> data = [];
+    await firestore
+        .collection('sections')
+        .get()
+        .then((QuerySnapshot? snapshot) {
+      data = snapshot!.docs.map((e) => Section.fromFirestore(e)).toList();
     });
     return data;
   }
@@ -115,19 +180,42 @@ class FirebaseService {
   }
 
   Future<List<Quiz>> getCategoryBasedQuizes(String catId) async {
+    debugPrint(catId);
     List<Quiz> data = [];
-    await firestore.collection('quizes').where('parent_id', isEqualTo: catId).get().then((QuerySnapshot? snapshot) {
+    await firestore
+        .collection('quizes')
+        .where('parent_id', isEqualTo: catId)
+        .get()
+        .then((QuerySnapshot? snapshot) {
+      data = snapshot!.docs.map((e) => Quiz.fromFirestore(e)).toList();
+    });
+    return data;
+  }
+
+  Future<List<Quiz>> getSectionBasedQuizes(String catId) async {
+    List<Quiz> data = [];
+    await firestore
+        .collection('quizes')
+        .where('sectionId', isEqualTo: catId)
+        .get()
+        .then((QuerySnapshot? snapshot) {
       data = snapshot!.docs.map((e) => Quiz.fromFirestore(e)).toList();
     });
     return data;
   }
 
   Future updateUserAccess(String userId, bool isDisabled) async {
-    return await firestore.collection('users').doc(userId).update({'disabled': isDisabled});
+    return await firestore
+        .collection('users')
+        .doc(userId)
+        .update({'disabled': isDisabled});
   }
 
   Future removeEditorAccess(String userId) async {
-    return await firestore.collection('users').doc(userId).set({'role': null}, SetOptions(merge: true));
+    return await firestore
+        .collection('users')
+        .doc(userId)
+        .set({'role': null}, SetOptions(merge: true));
   }
 
   Future assignEditorAccess(String userId) async {
@@ -137,16 +225,23 @@ class FirebaseService {
   }
 
   Future removeCategoryFromFeatured(String documentName) async {
-    return firestore.collection('categories').doc(documentName).update({'featured': false});
+    return firestore
+        .collection('categories')
+        .doc(documentName)
+        .update({'featured': false});
   }
 
   Future addCategoryToFeatured(String id) async {
-    return firestore.collection('categories').doc(id).update({'featured': true});
+    return firestore
+        .collection('categories')
+        .doc(id)
+        .update({'featured': true});
   }
 
   Future<SpecialCategory> getSpecialCategory() async {
     SpecialCategory specialCategory;
-    final DocumentReference ref = firestore.collection('settings').doc('special_categories');
+    final DocumentReference ref =
+        firestore.collection('settings').doc('special_categories');
     DocumentSnapshot snapshot = await ref.get();
     if (snapshot.exists) {
       debugPrint('true');
@@ -161,7 +256,8 @@ class FirebaseService {
 
   Future saveSpecialCategory(SpecialCategory specialCategory) async {
     Map<String, dynamic> data = SpecialCategory.getMap(specialCategory);
-    final DocumentReference ref = firestore.collection('settings').doc('special_categories');
+    final DocumentReference ref =
+        firestore.collection('settings').doc('special_categories');
     DocumentSnapshot snapshot = await ref.get();
     if (snapshot.exists) {
       debugPrint('true');
@@ -172,11 +268,14 @@ class FirebaseService {
     }
   }
 
-  Future<String> uploadImageToFirebaseHosting(XFile image, String folderName) async {
+  Future<String> uploadImageToFirebaseHosting(
+      XFile image, String folderName) async {
     //return download link
     Uint8List imageData = await XFile(image.path).readAsBytes();
-    final Reference storageReference = FirebaseStorage.instance.ref().child('$folderName/${image.name}.png');
-    final SettableMetadata metadata = SettableMetadata(contentType: 'image/png');
+    final Reference storageReference =
+        FirebaseStorage.instance.ref().child('$folderName/${image.name}.png');
+    final SettableMetadata metadata =
+        SettableMetadata(contentType: 'image/png');
     final UploadTask uploadTask = storageReference.putData(imageData, metadata);
     final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
     String imageUrl = await snapshot.ref.getDownloadURL();
@@ -215,7 +314,9 @@ class FirebaseService {
   Future updateCategoriesOrder(List<Category> categories) async {
     final batch = firestore.batch();
     for (int i = 0; i < categories.length; i++) {
-      final docRef = FirebaseFirestore.instance.collection('categories').doc(categories[i].id);
+      final docRef = FirebaseFirestore.instance
+          .collection('categories')
+          .doc(categories[i].id);
       batch.update(docRef, {'index': i});
     }
     await batch.commit();
@@ -235,12 +336,16 @@ class FirebaseService {
   }
 
   // Get Firebase UID for new document
-  static String getUID(String collectionName) => FirebaseFirestore.instance.collection(collectionName).doc().id;
+  static String getUID(String collectionName) =>
+      FirebaseFirestore.instance.collection(collectionName).doc().id;
 
   Future<List<ChartModel>> getUserStats(int days) async {
     List<ChartModel> stats = [];
     DateTime lastWeek = DateTime.now().subtract(Duration(days: days));
-    final QuerySnapshot snapshot = await firestore.collection('user_stats').where('timestamp', isGreaterThanOrEqualTo: lastWeek).get();
+    final QuerySnapshot snapshot = await firestore
+        .collection('user_stats')
+        .where('timestamp', isGreaterThanOrEqualTo: lastWeek)
+        .get();
     stats = snapshot.docs.map((e) => ChartModel.fromFirestore(e)).toList();
     return stats;
   }
@@ -248,14 +353,22 @@ class FirebaseService {
   Future<List<ChartModel>> getPurchaseStats(int days) async {
     List<ChartModel> stats = [];
     DateTime lastWeek = DateTime.now().subtract(Duration(days: days));
-    final QuerySnapshot snapshot = await firestore.collection('purchase_stats').where('timestamp', isGreaterThanOrEqualTo: lastWeek).get();
+    final QuerySnapshot snapshot = await firestore
+        .collection('purchase_stats')
+        .where('timestamp', isGreaterThanOrEqualTo: lastWeek)
+        .get();
     stats = snapshot.docs.map((e) => ChartModel.fromFirestore(e)).toList();
     return stats;
   }
 
   Future<List<UserModel>> getLatestUsers(int limit) async {
     List<UserModel> data = [];
-    await firestore.collection('users').orderBy('created_at', descending: true).limit(limit).get().then((QuerySnapshot? snapshot) {
+    await firestore
+        .collection('users')
+        .orderBy('created_at', descending: true)
+        .limit(limit)
+        .get()
+        .then((QuerySnapshot? snapshot) {
       data = snapshot!.docs.map((e) => UserModel.fromFirestore(e)).toList();
     });
     return data;
@@ -263,7 +376,12 @@ class FirebaseService {
 
   Future<List<UserModel>> getTopUsers(int limit) async {
     List<UserModel> data = [];
-    await firestore.collection('users').orderBy('points', descending: true).limit(limit).get().then((QuerySnapshot? snapshot) {
+    await firestore
+        .collection('users')
+        .orderBy('points', descending: true)
+        .limit(limit)
+        .get()
+        .then((QuerySnapshot? snapshot) {
       data = snapshot!.docs.map((e) => UserModel.fromFirestore(e)).toList();
     });
     return data;
@@ -271,7 +389,12 @@ class FirebaseService {
 
   Future<List<PurchaseModel>> getLatestPurchases(int limit) async {
     List<PurchaseModel> data = [];
-    await firestore.collection('purchases').orderBy('purchase_at', descending: true).limit(limit).get().then((QuerySnapshot? snapshot) {
+    await firestore
+        .collection('purchases')
+        .orderBy('purchase_at', descending: true)
+        .limit(limit)
+        .get()
+        .then((QuerySnapshot? snapshot) {
       data = snapshot!.docs.map((e) => PurchaseModel.fromFirestore(e)).toList();
     });
     return data;
@@ -297,13 +420,16 @@ class FirebaseService {
 
   Future<UserModel?> getUserData() async {
     final String userId = FirebaseAuth.instance.currentUser!.uid;
-    final DocumentSnapshot snap = await firestore.collection('users').doc(userId).get();
+    final DocumentSnapshot snap =
+        await firestore.collection('users').doc(userId).get();
     UserModel? user = UserModel.fromFirestore(snap);
     return user;
   }
 
   static Query notificationsQuery() {
-    return FirebaseFirestore.instance.collection('notifications').orderBy('date', descending: true);
+    return FirebaseFirestore.instance
+        .collection('notifications')
+        .orderBy('date', descending: true);
   }
 
   Future saveNotification(NotificationModel notification) async {

@@ -1,3 +1,4 @@
+import 'package:app_admin/providers/categories_provider.dart';
 import 'package:app_admin/tabs/dashboard/dashboard_card.dart';
 import 'package:app_admin/providers/dashboard_providers.dart';
 import 'package:app_admin/services/app_service.dart';
@@ -31,12 +32,34 @@ class DashboardScreen extends ConsumerWidget {
                 childAspectRatio: 2.5,
               ),
               children: [
-                DashboardCard(info: 'Total Users', count: ref.watch(usersCountProvider).value ?? 0, icon: LineIcons.userCheck),
-                DashboardCard(info: 'Total Categories', count: ref.watch(categoriessCountProvider).value ?? 0, icon: CupertinoIcons.grid),
-                DashboardCard(info: 'Total Quizzes', count: ref.watch(quizzesCountProvider).value ?? 0, icon: LineIcons.list),
-                DashboardCard(info: 'Total Questions', count: ref.watch(questionsCountProvider).value ?? 0, icon: LineIcons.lightbulb),
-                DashboardCard(info: 'Total Purchases', count: ref.watch(purchasesCountProvider).value ?? 0, icon: LineIcons.dollarSign),
-                DashboardCard(info: 'Total Notifications', count: ref.watch(notificationsCountProvider).value ?? 0, icon: LineIcons.bell),
+                DashboardCard(
+                    info: 'Total Users',
+                    count: ref.watch(usersCountProvider).value ?? 0,
+                    icon: LineIcons.userCheck),
+                DashboardCard(
+                    info: 'Total Categories',
+                    count: ref.watch(categoriessCountProvider).value ?? 0,
+                    icon: CupertinoIcons.grid),
+                DashboardCard(
+                    info: 'Total Sections',
+                    count: ref.watch(sectionsCountProvider).value ?? 0,
+                    icon: CupertinoIcons.grid),
+                DashboardCard(
+                    info: 'Total Quizzes',
+                    count: ref.watch(quizzesCountProvider).value ?? 0,
+                    icon: LineIcons.list),
+                DashboardCard(
+                    info: 'Total Questions',
+                    count: ref.watch(questionsCountProvider).value ?? 0,
+                    icon: LineIcons.lightbulb),
+                DashboardCard(
+                    info: 'Total Purchases',
+                    count: ref.watch(purchasesCountProvider).value ?? 0,
+                    icon: LineIcons.dollarSign),
+                DashboardCard(
+                    info: 'Total Notifications',
+                    count: ref.watch(notificationsCountProvider).value ?? 0,
+                    icon: LineIcons.bell),
               ],
             ),
             const Padding(
@@ -59,12 +82,22 @@ class OtherDashboardTabs extends StatelessWidget {
       return const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Flexible(flex: 1, child: Column(children: [UserBarChart(), SizedBox(height: 20), DashboardPurchases()])),
+          Flexible(
+              flex: 1,
+              child: Column(children: [
+                UserBarChart(),
+                SizedBox(height: 20),
+                DashboardPurchases()
+              ])),
           SizedBox(width: 20),
           Flexible(
             flex: 1,
             child: Column(
-              children: [PurchaseBarChart(), SizedBox(height: 20), DashboardLatestUsers()],
+              children: [
+                PurchaseBarChart(),
+                SizedBox(height: 20),
+                DashboardLatestUsers()
+              ],
             ),
           ),
           SizedBox(width: 20),

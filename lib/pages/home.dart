@@ -15,6 +15,7 @@ import '../tabs/categories/categories.dart';
 import '../tabs/license_tab.dart';
 import '../tabs/purchases/purchases.dart';
 import '../tabs/questions.dart';
+import '../tabs/sections.dart';
 import '../tabs/settings.dart';
 import '../tabs/users.dart';
 import '../utils/next_screen.dart';
@@ -43,6 +44,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final List<Widget> _list = <Widget>[
     const DashboardScreen(),
     const Categories(),
+    const Sections(),
     const Quizzes(),
     const Questions(),
     const FeaturedCategories(),
@@ -59,6 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     Future.delayed(Duration.zero).then((value) {
       ref.read(categoriesProvider.notifier).getCategories();
+      ref.read(sectionProvider.notifier).getSections();
       context.read<SettingsBloc>().getSettingsData();
       context.read<AdsBloc>().getAdsData();
     });

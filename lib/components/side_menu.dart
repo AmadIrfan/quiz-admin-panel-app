@@ -8,15 +8,16 @@ import 'package:line_icons/line_icons.dart';
 const Map<int, List<dynamic>> itemList = {
   0: ['Dashboard', LineIcons.pieChart],
   1: ['Courses', CupertinoIcons.book],
-  2: ['Quizzes', LineIcons.list],
-  3: ['Questions', LineIcons.lightbulb],
-  4: ['Featured', LineIcons.bomb],
-  5: ['Users', LineIcons.usersCog],
-  6: ['Purchases', LineIcons.dollarSign],
-  7: ['Notifications', LineIcons.bell],
-  8: ['Ads', CupertinoIcons.money_dollar],
-  9: ['Settings', CupertinoIcons.settings],
-  10: ['License', LineIcons.key],
+  2: ['Sections', LineIcons.list],
+  3: ['Quizzes', LineIcons.list],
+  4: ['Questions', LineIcons.lightbulb],
+  5: ['Featured', LineIcons.bomb],
+  6: ['Users', LineIcons.usersCog],
+  7: ['Purchases', LineIcons.dollarSign],
+  8: ['Notifications', LineIcons.bell],
+  9: ['Ads', CupertinoIcons.money_dollar],
+  10: ['Settings', CupertinoIcons.settings],
+  11: ['License', LineIcons.key],
 };
 
 class SideMenu extends StatelessWidget {

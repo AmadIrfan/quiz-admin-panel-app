@@ -5,6 +5,7 @@ class Quiz {
   String? id;
   String? thumbnailUrl;
   String? parentId;
+  String? sectionId;
   bool? timer;
   int? quizTime;
   int? questionCount;
@@ -14,36 +15,37 @@ class Quiz {
   String? questionOrder;
   int? index;
 
-  Quiz({
-    required this.name,
-    required this.id,
-    required this.thumbnailUrl,
-    required this.parentId,
-    required this.timer,
-    this.quizTime,
-    this.questionCount,
-    required this.description,
-    this.featured,
-    required this.pointsRequired,
-    this.questionOrder,
-    this.index
-  });
+  Quiz(
+      {required this.name,
+      required this.id,
+      required this.thumbnailUrl,
+      required this.parentId,
+      required this.timer,
+      required this.sectionId,
+      this.quizTime,
+      this.questionCount,
+      required this.description,
+      this.featured,
+      required this.pointsRequired,
+      this.questionOrder,
+      this.index});
 
   factory Quiz.fromFirestore(DocumentSnapshot snap) {
     Map d = snap.data() as Map<dynamic, dynamic>;
     return Quiz(
-        name: d['name'],
-        id: d['id'],
-        thumbnailUrl: d['image_url'],
-        parentId: d['parent_id'],
-        timer: d['timer'],
-        quizTime: d['quiz_time'],
-        questionCount: d['question_count'],
-        description: d['description'],
-        featured: d['featured'],
-        pointsRequired: d['points_required'],
-        questionOrder: d['question_order'],
-        index: d['index']
+      name: d['name'],
+      id: d['id'],
+      thumbnailUrl: d['image_url'],
+      parentId: d['parent_id'],
+      timer: d['timer'],
+      quizTime: d['quiz_time'],
+      questionCount: d['question_count'],
+      description: d['description'],
+      featured: d['featured'],
+      pointsRequired: d['points_required'],
+      questionOrder: d['question_order'],
+      index: d['index'],
+      sectionId: d['sectionId'],
     );
   }
 
@@ -60,7 +62,8 @@ class Quiz {
       'featured': d.featured,
       'points_required': d.pointsRequired,
       'question_order': d.questionOrder,
-      'index': d.index
+      'index': d.index,
+      'sectionId': d.sectionId,
     };
   }
 }

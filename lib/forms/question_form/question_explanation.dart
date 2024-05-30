@@ -26,7 +26,7 @@ class QuestionExplanation extends StatelessWidget {
             decoration: BoxDecoration(color: Colors.grey[100], border: Border.all(width: 2, color: Colors.grey[300]!)),
             child: CustomHtmlEditor(
               controller: editorController,
-              initialText: q == null || q?.explaination == null ? '' : q!.explaination.toString(),
+              initialText: q == null || q?.explanation == null ? '' : q!.explanation.toString(),
             )),
       ],
     );

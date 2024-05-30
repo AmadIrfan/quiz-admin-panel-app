@@ -33,7 +33,7 @@ class _QuizFormState extends ConsumerState<QuizForm> {
   var nameCtlr = TextEditingController();
   var thumbnailUrlCtlr = TextEditingController();
   var timeCtlr = TextEditingController();
-  var pointsReqCtlr = TextEditingController();
+  var pointsReqCtlr = TextEditingController(text: 0.toString());
   final _btnCtlr = RoundedLoadingButtonController();
   var formKey = GlobalKey<FormState>();
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -41,6 +41,7 @@ class _QuizFormState extends ConsumerState<QuizForm> {
 
   final HtmlEditorController controller = HtmlEditorController();
   String? _selectedCategoryId;
+  String? _selectedSectionId;
   bool _timer = true;
   final int _defaultQuizTime = 2; //2 minutes as default
   XFile? _selectedImage;
@@ -67,14 +68,17 @@ class _QuizFormState extends ConsumerState<QuizForm> {
       thumbnailUrlCtlr.text = widget.quiz!.thumbnailUrl!;
       timeCtlr.text = widget.quiz!.quizTime.toString();
       pointsReqCtlr.text = widget.quiz!.pointsRequired.toString();
-      _qOrderString = AppService.setQuestionOrderString(widget.quiz!.questionOrder);
+      _qOrderString =
+          AppService.setQuestionOrderString(widget.quiz!.questionOrder);
     }
   }
 
   @override
   void initState() {
     _submitBtnText = widget.quiz == null ? 'Upload Quiz' : 'Update Quiz';
-    _dialogText = widget.quiz == null ? 'Uploaded Successfully!' : 'Updated Successfully!';
+    _dialogText = widget.quiz == null
+        ? 'Uploaded Successfully!'
+        : 'Updated Successfully!';
     initData();
     super.initState();
   }
@@ -82,33 +86,41 @@ class _QuizFormState extends ConsumerState<QuizForm> {
   void _handleSubmit() async {
     if (hasAccess(ref)) {
       if (_selectedCategoryId != null) {
-        if (formKey.currentState!.validate()) {
-          formKey.currentState!.save();
-          if (await controller.getText() != '') {
-            if (_selectedImage != null) {
-              //local image
-              _btnCtlr.start();
-              await FirebaseService().uploadImageToFirebaseHosting(_selectedImage!, 'quiz_thumbnails').then((String? imageUrl) {
-                if (imageUrl != null) {
-                  setState(() => thumbnailUrlCtlr.text = imageUrl);
-                  _uploadProcedure();
-                } else {
-                  setState(() {
-                    _selectedImage = null;
-                    thumbnailUrlCtlr.clear();
-                    _btnCtlr.reset();
-                  });
-                }
-              });
-            } else {
-              //netwok image
-              _btnCtlr.start();
-              _uploadProcedure();
+        if (_selectedSectionId != null) {
+          if (formKey.currentState!.validate()) {
+            formKey.currentState!.save();
+            if (await controller.getText() != '') {
+              if (_selectedImage != null) {
+                //local image
+                _btnCtlr.start();
+                await FirebaseService()
+                    .uploadImageToFirebaseHosting(
+                        _selectedImage!, 'quiz_thumbnails')
+                    .then((String? imageUrl) {
+                  if (imageUrl != null) {
+                    setState(() => thumbnailUrlCtlr.text = imageUrl);
+                    _uploadProcedure();
+                  } else {
+                    setState(() {
+                      _selectedImage = null;
+                      thumbnailUrlCtlr.clear();
+                      _btnCtlr.reset();
+                    });
+                  }
+                });
+              } else {
+                //netwok image
+                _btnCtlr.start();
+                _uploadProcedure();
+              }
             }
           } else {
             // ignore: use_build_context_synchronously
-            openCustomDialog(context, "Description can't be empty", '');
+            openCustomDialog(
+                context, "Description field or text field can't be empty", '');
           }
+        } else {
+          openCustomDialog(context, 'Select A Section of Category First', '');
         }
       } else {
         openCustomDialog(context, 'Select A Category First', '');
@@ -121,7 +133,8 @@ class _QuizFormState extends ConsumerState<QuizForm> {
   _uploadProcedure() async {
     await uploadQuiz().then((value) async {
       if (widget.quiz == null) {
-        await await FirebaseService().increaseQuizCountInCategory(_selectedCategoryId!);
+        await await FirebaseService()
+            .increaseQuizCountInCategory(_selectedCategoryId!);
         ref.invalidate(quizzesCountProvider);
       }
       _btnCtlr.success();
@@ -133,23 +146,32 @@ class _QuizFormState extends ConsumerState<QuizForm> {
   }
 
   Future uploadQuiz() async {
-    String docId = widget.quiz == null ? firestore.collection(collectionName).doc().id : widget.quiz!.id!;
+    String docId = widget.quiz == null
+        ? firestore.collection(collectionName).doc().id
+        : widget.quiz!.id!;
     final String qOrder = AppService.getQuestionOrder(_qOrderString);
     final String description = await controller.getText();
-    final int questionCount = widget.quiz == null ? 0 : widget.quiz!.questionCount!;
+    final int questionCount =
+        widget.quiz == null ? 0 : widget.quiz!.questionCount!;
     Quiz d = Quiz(
-        id: docId,
-        name: nameCtlr.text,
-        thumbnailUrl: thumbnailUrlCtlr.text,
-        timer: _timer,
-        parentId: _selectedCategoryId,
-        quizTime: _timer ? int.parse(timeCtlr.text) : 0,
-        questionCount: questionCount,
-        pointsRequired: int.parse(pointsReqCtlr.text),
-        description: description,
-        questionOrder: qOrder);
+      id: docId,
+      name: nameCtlr.text,
+      thumbnailUrl: thumbnailUrlCtlr.text,
+      timer: _timer,
+      sectionId: _selectedSectionId,
+      parentId: _selectedCategoryId,
+      quizTime: _timer ? int.parse(timeCtlr.text) : 0,
+      questionCount: questionCount,
+      // pointsRequired: int.parse(pointsReqCtlr.text),
+      pointsRequired: 0,
+      description: description,
+      questionOrder: qOrder,
+    );
     Map<String, dynamic> data = Quiz.getMap(d);
-    await firestore.collection(collectionName).doc(docId).set(data, SetOptions(merge: true));
+    await firestore
+        .collection(collectionName)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
   }
 
   @override
@@ -184,7 +206,10 @@ class _QuizFormState extends ConsumerState<QuizForm> {
             children: [
               Text(
                 _submitBtnText,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white),
               )
             ],
           ),
@@ -207,12 +232,16 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
                             'Category',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         CategoryDropdown(
                           selectedCategoryId: _selectedCategoryId,
                           onChanged: (value) {
+                            _selectedCategoryId = '';
                             _selectedCategoryId = value;
                             setState(() {});
                           },
@@ -223,33 +252,65 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                   const SizedBox(
                     width: 15,
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 5),
-                          child: Text(
-                            'Quiz Name',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                  _selectedCategoryId != null
+                      ? Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 5),
+                                child: Text(
+                                  'Section',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              SectionDropdown(
+                                selectedCategoryId: _selectedCategoryId,
+                                selectedSectionId: _selectedSectionId,
+                                onChanged: (value) {
+                                  _selectedSectionId = value;
+                                  setState(() {});
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                        TextFormField(
-                            controller: nameCtlr,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                hintText: 'Enter Quiz Title',
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => nameCtlr.clear(),
-                                )),
-                            validator: (value) {
-                              if (value!.isEmpty) return 'Value is empty';
-                              return null;
-                            }),
-                      ],
+                        )
+                      : const SizedBox(),
+                ],
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Text(
+                      'Quiz Name',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
+                  TextFormField(
+                      controller: nameCtlr,
+                      decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          hintText: 'Enter Quiz Title',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => nameCtlr.clear(),
+                          )),
+                      validator: (value) {
+                        if (value!.isEmpty) return 'Value is empty';
+                        return null;
+                      }),
                 ],
               ),
               const SizedBox(
@@ -265,7 +326,10 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
                             'Quiz Thumbnail Image',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         ImageTextField(
@@ -292,17 +356,26 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                           padding: const EdgeInsets.only(bottom: 5),
                           child: Text(
                             'Points Required To Play This Quiz',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         SizedBox(
                           width: 200,
                           child: TextFormField(
+                              // enabled: false,
+                              readOnly: true,
                               controller: pointsReqCtlr,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(3)
+                              ],
                               decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10)),
                                   hintText: 'Enter Points',
                                   suffixIcon: IconButton(
                                     icon: const Icon(Icons.close),
@@ -325,7 +398,10 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   'Question Order',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               _questionOrderDropdown(),
@@ -340,14 +416,21 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   'Enter Quiz Description',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               Container(
-                  decoration: BoxDecoration(color: Colors.grey[100], border: Border.all(width: 2, color: Colors.grey[300]!)),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      border: Border.all(width: 2, color: Colors.grey[300]!)),
                   child: CustomHtmlEditor(
                     controller: controller,
-                    initialText: widget.quiz == null ? '' : widget.quiz!.description.toString(),
+                    initialText: widget.quiz == null
+                        ? ''
+                        : widget.quiz!.description.toString(),
                   )),
               const SizedBox(
                 height: 50,
@@ -413,7 +496,10 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
                     'Timer In Minutes Per Complete Quiz',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
                 SizedBox(
@@ -421,9 +507,13 @@ class _QuizFormState extends ConsumerState<QuizForm> {
                   child: TextFormField(
                       controller: timeCtlr,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(2)
+                      ],
                       decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
                           hintText: 'Timer in Minutes',
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.close),
@@ -446,7 +536,10 @@ class _QuizFormState extends ConsumerState<QuizForm> {
     return Container(
         height: 50,
         padding: const EdgeInsets.only(left: 15, right: 15),
-        decoration: BoxDecoration(color: Colors.grey[200], border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(
+            color: Colors.grey[200],
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(30)),
         child: DropdownButtonFormField(
             itemHeight: 50,
             decoration: const InputDecoration(border: InputBorder.none),

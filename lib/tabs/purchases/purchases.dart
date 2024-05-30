@@ -43,7 +43,6 @@ class Purchases extends ConsumerWidget {
           List<PurchaseModel> purchases = [];
           purchases = snapshot.docs.map((e) => PurchaseModel.fromFirestore(e)).toList();
           DataTableSource source = PurchasesDataSource(context, purchases);
-
           return PaginatedDataTable2(
             header: Text('Purchase History', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
             empty: const Center(child: Text('No History Found')),

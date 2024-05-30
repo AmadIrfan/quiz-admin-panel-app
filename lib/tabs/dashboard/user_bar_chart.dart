@@ -24,11 +24,14 @@ class UserBarChart extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: <BoxShadow>[
-        BoxShadow(
-          color: Colors.grey.shade300,
-        )
-      ]),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.grey.shade300,
+            )
+          ]),
       child: AspectRatio(
         aspectRatio: 1.2,
         child: Column(
@@ -61,7 +64,9 @@ class UserBarChart extends ConsumerWidget {
                     ref.read(usersStateDaysCount.notifier).update((state) => 7);
                     ref.invalidate(userStatsProvider);
                   } else {
-                    ref.read(usersStateDaysCount.notifier).update((state) => 30);
+                    ref
+                        .read(usersStateDaysCount.notifier)
+                        .update((state) => 30);
                     ref.invalidate(userStatsProvider);
                   }
                 },
@@ -74,7 +79,8 @@ class UserBarChart extends ConsumerWidget {
                 unselectedLabelColor: Colors.grey,
                 indicatorPadding: const EdgeInsets.all(8),
                 tabAlignment: TabAlignment.center,
-                labelPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 30),
+                labelPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 30),
                 tabs: const [
                   Tab(
                     child: Text('Last 7 Days'),
@@ -88,7 +94,8 @@ class UserBarChart extends ConsumerWidget {
             const SizedBox(height: 20),
             Expanded(
               child: usersStateRef.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, x) => const EmptyBarChart(),
                   skipError: true,
                   data: (usersStat) {
@@ -100,16 +107,22 @@ class UserBarChart extends ConsumerWidget {
                           touchTooltipData: _getTouchData(context, usersStat),
                         ),
                         barGroups: generateBarGroups(context, usersStat),
-                        borderData: FlBorderData(show: true, border: Border.all(color: Colors.blueGrey.shade100)),
+                        borderData: FlBorderData(
+                            show: true,
+                            border:
+                                Border.all(color: Colors.blueGrey.shade100)),
                         gridData: const FlGridData(show: true),
                         titlesData: FlTitlesData(
                           show: true,
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              getTitlesWidget: (value, meta) => _bottomTitles(value, ref),
+                              getTitlesWidget: (value, meta) =>
+                                  _bottomTitles(value, ref),
                             ),
                           ),
                         ),
@@ -134,18 +147,26 @@ class UserBarChart extends ConsumerWidget {
     return Text(title);
   }
 
-  BarTouchTooltipData _getTouchData(BuildContext context, List<ChartModel> usersStat) {
+  BarTouchTooltipData _getTouchData(
+      BuildContext context, List<ChartModel> usersStat) {
     return BarTouchTooltipData(
-      tooltipBgColor: Theme.of(context).primaryColor,
+//       tooltipBgColor: Theme.of(context).primaryColor,
       getTooltipItem: (groupData, groupIndex, rod, rodIndex) {
         // Get Date
         final ChartModel model = usersStat[groupIndex];
-        final String formattedDate = DateFormat('dd/MM/yyyy').format(model.timestamp);
+        final String formattedDate =
+            DateFormat('dd/MM/yyyy').format(model.timestamp);
 
-        return BarTooltipItem('${rod.toY} Users', const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16), children: [
-          const TextSpan(text: '\n'),
-          TextSpan(text: formattedDate, style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-        ]);
+        return BarTooltipItem(
+            '${rod.toY} Users',
+            const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16),
+            children: [
+              const TextSpan(text: '\n'),
+              TextSpan(
+                  text: formattedDate,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+            ]);
       },
     );
   }
@@ -154,7 +175,8 @@ class UserBarChart extends ConsumerWidget {
     // Group user registrations by day
     Map<DateTime, dynamic> groupedData = {};
     userStats.forEach((registration) {
-      DateTime day = DateTime(registration.timestamp.year, registration.timestamp.month, registration.timestamp.day);
+      DateTime day = DateTime(registration.timestamp.year,
+          registration.timestamp.month, registration.timestamp.day);
 
       if (groupedData.containsKey(day)) {
         groupedData[day] = groupedData[day]! + registration.count;

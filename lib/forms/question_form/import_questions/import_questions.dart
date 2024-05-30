@@ -223,7 +223,7 @@ class _BulkUploadState extends ConsumerState<BulkUpload> {
       String? explanation = question.explanation == "" ? null : question.explanation;
       Question q = Question(
         id: id,
-        catId: _selectedCategoryId,
+        sectionId: _selectedCategoryId,
         createdAt: createdAt,
         updatedAt: null,
         questionTitle: question.question,
@@ -234,7 +234,7 @@ class _BulkUploadState extends ConsumerState<BulkUpload> {
         questionImageUrl: question.questionImageURL,
         questionAudioUrl: question.questionAudioURL,
         questionVideoUrl: question.questionVideoURL,
-        explaination: explanation,
+        explanation: explanation,
         optionsType: question.optionType,
       );
 
